@@ -19,4 +19,4 @@ def __init__(self):
 
 if __name__ == "__main__":
     managerS = manager()  # initialise instance of managerServer()
-    app.run(port=5000) 
+    flask.run(port=5000) 
