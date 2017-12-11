@@ -4,13 +4,13 @@ from flask_restful import Resource, Api
 flask = Flask(__name__)
 api = Api(app)
 
-#class getReposit(Resource)
+class getReposit(Resource)
 def __init__(self):
     global managerS 
     self.server = managerS #initialise the global server
 
 
-#class cyclomaticApi() to obtain commits and post cyclometric complexity results
+class cyclomaticApi() #to obtain commits and post cyclometric complexity results
 def __init__(self):
     global managerS 
     self.server = managerS #initialise the global server
