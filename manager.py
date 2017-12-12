@@ -28,13 +28,53 @@ class getReposit(Resource)
         
     def post(self): 
         pass # not needed because slave/worker won't post anything in getRepo clas
+
 api.add_resource(getRepository, "/repo", endpoint="repo")
     
     
 class cyclomaticApi() #to obtain commits and post cyclometric complexity results
-def __init__(self):
-    global managerS 
-    self.server = managerS #initialise the global server
+    def __init__(self):
+        global managerS 
+        self.server = managerS #initialise the global server
+        super(cyclomaticApi, self).__init__() #intialise Resourceclass
+        self.reqparser = reqparse.RequestParser()
+    
+        self.reqparser.add_argument('commitSha', type=str, location = 'json') 
+        self.reqparser.add_argument('complexity', type=float, location='json') #for every value coming to JSON, we're adding argument
+    
+  def get(self):
+      if self.server.curWorkerNo < self.server.numWorkers:
+            time.sleep(0.1)
+            return {'sha': -2}
+      if len(self.server.commitList) == 0:
+            return {'sha': -1}
+      commitValue = self.server.commitList[0]
+      del self.server.commitList[0]
+      print("Sent: {}".format(commitValue))
+      return {'sha':commitValue}
+    
+  def post(self):
+     args = self.reqparser.parse_args()
+     print("Received sha {}".format(args['commitSha']))
+     print("Received complexity {}".format(args['complexity']))
+     self.server.listOfCCs.append({'sha':args['commitSha'], 'complexity':args['complexity']})
+     print(self.server.listOfCCs)
+     print(self.server.commitList)
+    if len(self.server.listOfCCs) == self.server.totalNumberOfCommits: #all sha received
+        endTime = time.time() - self.server.startTime
+        print("finished in {} seconds".format(endTime))
+        print(len(self.server.listOfCCs))
+            totalAverageCC = 0
+            for x in self.server.listOfCCs:
+                if x['complexity'] > 0:
+                    totalAverageCC += x['complexity']
+                else:
+                    print("Commit {} has no computable files".format(x['sha']))
+                totalAverageCC = totalAverageCC / len(self.server.listOfCCs)
+                print("Total Cyclometric Coplexityof this repository is : {}".format(totalAverageCC))
+     return {'success':True}
+   
+    api.add_resource(cyclomaticApi, "/cyclomatic", endpoint="cyclomatic") 
 
     
 class manager():
@@ -68,6 +108,7 @@ class manager():
                         currentPage += 1 #page increment after sha commit
           self.totalNumberOfCommits = len(self.commitList)  
           print("Number of commits: {}".format(self.totalNumberOfCommits))
+          self.listOfCCs = []
 
 if __name__ == "__main__":
     managerS = manager()  # initialise instance of managerServer()
